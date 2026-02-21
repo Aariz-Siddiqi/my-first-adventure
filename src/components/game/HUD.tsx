@@ -2,9 +2,20 @@ interface HUDProps {
   score: number;
   total: number;
   isLocked: boolean;
+  elapsedTime: number;
+  bestTime: number | null;
 }
 
-export default function HUD({ score, total, isLocked }: HUDProps) {
+function formatTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  const ms = Math.floor((seconds % 1) * 100);
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+}
+
+export default function HUD({ score, total, isLocked, elapsedTime, bestTime }: HUDProps) {
+  const won = score === total && total > 0;
+
   return (
     <div className="pointer-events-none absolute inset-0 z-10">
       {/* Crosshair */}
@@ -23,15 +34,38 @@ export default function HUD({ score, total, isLocked }: HUDProps) {
         </div>
       </div>
 
+      {/* Timer */}
+      <div className="absolute top-6 right-6 text-right">
+        <div className="font-display text-xs tracking-widest text-muted-foreground uppercase mb-1">
+          Time
+        </div>
+        <div className="font-display text-3xl text-glow-cyan text-primary">
+          {formatTime(elapsedTime)}
+        </div>
+        {bestTime !== null && (
+          <div className="font-display text-xs text-muted-foreground mt-1">
+            Best: {formatTime(bestTime)}
+          </div>
+        )}
+      </div>
+
       {/* Win message */}
-      {score === total && total > 0 && (
+      {won && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
-            <div className="font-display text-5xl text-glow-magenta text-accent mb-4">
+            <div className="font-display text-5xl text-glow-magenta text-accent mb-2">
               ALL COLLECTED!
             </div>
+            <div className="font-display text-2xl text-glow-cyan text-primary mb-4">
+              {formatTime(elapsedTime)}
+            </div>
+            {bestTime !== null && bestTime === elapsedTime && (
+              <div className="font-display text-lg text-neon-yellow mb-4 animate-pulse">
+                ★ NEW BEST TIME ★
+              </div>
+            )}
             <div className="font-display text-lg text-muted-foreground tracking-widest">
-              YOU WIN — PRESS R TO RESTART
+              PRESS R TO RESTART
             </div>
           </div>
         </div>
