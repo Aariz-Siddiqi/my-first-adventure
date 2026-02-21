@@ -4,6 +4,34 @@ import * as THREE from 'three';
 const ARENA_SIZE = 48;
 const WALL_HEIGHT = 4;
 
+export interface PlatformData {
+  position: [number, number, number];
+  size: [number, number, number]; // width, height, depth
+}
+
+export const PLATFORMS: PlatformData[] = [
+  // Low platforms (height ~1.2)
+  { position: [-12, 0.6, -12], size: [4, 1.2, 4] },
+  { position: [12, 0.6, -12], size: [4, 1.2, 4] },
+  { position: [-12, 0.6, 12], size: [4, 1.2, 4] },
+  { position: [12, 0.6, 12], size: [4, 1.2, 4] },
+  // Medium platforms (height ~2)
+  { position: [0, 1, -6], size: [5, 2, 3] },
+  { position: [0, 1, 6], size: [5, 2, 3] },
+  { position: [-6, 1, 0], size: [3, 2, 5] },
+  { position: [6, 1, 0], size: [3, 2, 5] },
+  // Tall platforms (height ~3)
+  { position: [-18, 1.5, 0], size: [4, 3, 4] },
+  { position: [18, 1.5, 0], size: [4, 3, 4] },
+  { position: [0, 1.5, -18], size: [4, 3, 4] },
+  { position: [0, 1.5, 18], size: [4, 3, 4] },
+  // Stepping stones
+  { position: [-3, 0.4, -14], size: [2.5, 0.8, 2.5] },
+  { position: [3, 0.8, -16], size: [2.5, 1.6, 2.5] },
+  { position: [14, 0.4, 3], size: [2.5, 0.8, 2.5] },
+  { position: [16, 0.8, -3], size: [2.5, 1.6, 2.5] },
+];
+
 function GridFloor() {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
@@ -53,7 +81,6 @@ function Wall({ position, rotation, width }: { position: [number, number, number
   );
 }
 
-// Interior obstacles
 function Pillar({ position }: { position: [number, number, number] }) {
   return (
     <mesh position={[position[0], WALL_HEIGHT / 2, position[2]]} castShadow>
@@ -64,6 +91,35 @@ function Pillar({ position }: { position: [number, number, number] }) {
         emissiveIntensity={0.08}
       />
     </mesh>
+  );
+}
+
+function Platform({ data }: { data: PlatformData }) {
+  const { position, size } = data;
+  return (
+    <group>
+      <mesh position={position} castShadow receiveShadow>
+        <boxGeometry args={size} />
+        <meshStandardMaterial
+          color="#0d1f3c"
+          emissive="#8800ff"
+          emissiveIntensity={0.12}
+          metalness={0.6}
+          roughness={0.3}
+        />
+      </mesh>
+      {/* Edge glow line on top */}
+      <mesh position={[position[0], position[1] + size[1] / 2 + 0.02, position[2]]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[size[0] - 0.1, size[2] - 0.1]} />
+        <meshStandardMaterial
+          color="#1a0a2e"
+          emissive="#8800ff"
+          emissiveIntensity={0.15}
+          transparent
+          opacity={0.6}
+        />
+      </mesh>
+    </group>
   );
 }
 
@@ -91,6 +147,10 @@ export default function Arena() {
       {/* Pillars */}
       {pillarPositions.map((pos, i) => (
         <Pillar key={i} position={pos} />
+      ))}
+      {/* Platforms */}
+      {PLATFORMS.map((p, i) => (
+        <Platform key={`platform-${i}`} data={p} />
       ))}
     </group>
   );

@@ -1,6 +1,7 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { PLATFORMS, type PlatformData } from './Arena';
 
 const MOVE_SPEED = 10;
 const MOUSE_SENSITIVITY = 0.002;
@@ -104,8 +105,28 @@ export default function Player({ onPositionUpdate }: PlayerProps) {
     verticalVelocity.current -= GRAVITY * delta;
     newPos.y = camera.position.y + verticalVelocity.current * delta;
 
-    if (newPos.y <= PLAYER_HEIGHT) {
-      newPos.y = PLAYER_HEIGHT;
+    // Check platform collisions
+    let groundLevel = PLAYER_HEIGHT; // default floor
+    for (const plat of PLATFORMS) {
+      const topY = plat.position[1] + plat.size[1] / 2;
+      const halfW = plat.size[0] / 2;
+      const halfD = plat.size[2] / 2;
+      const onPlatformXZ =
+        newPos.x >= plat.position[0] - halfW &&
+        newPos.x <= plat.position[0] + halfW &&
+        newPos.z >= plat.position[2] - halfD &&
+        newPos.z <= plat.position[2] + halfD;
+      if (onPlatformXZ) {
+        const platGroundLevel = topY + PLAYER_HEIGHT;
+        // Only land if coming from above
+        if (platGroundLevel > groundLevel && camera.position.y >= topY + PLAYER_HEIGHT - 0.3) {
+          groundLevel = platGroundLevel;
+        }
+      }
+    }
+
+    if (newPos.y <= groundLevel) {
+      newPos.y = groundLevel;
       verticalVelocity.current = 0;
       isGrounded.current = true;
     }
