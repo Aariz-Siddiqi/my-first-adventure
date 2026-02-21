@@ -83,6 +83,7 @@ export default function HUD({ score, total, isLocked, elapsedTime, bestTime }: H
             </div>
             <div className="font-body text-sm text-muted-foreground/60 space-y-1">
               <div>WASD / Arrow Keys — Move</div>
+              <div>Space — Jump</div>
               <div>Mouse — Look around</div>
               <div>Collect all the orbs!</div>
             </div>

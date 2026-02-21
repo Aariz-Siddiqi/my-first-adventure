@@ -7,6 +7,7 @@ import Lighting from './Lighting';
 import HUD from './HUD';
 
 const COLLECTIBLE_DATA = [
+  // Ground level orbs
   { position: [-10, 1.2, -10] as [number, number, number], color: '#00ffff' },
   { position: [10, 1.2, -10] as [number, number, number], color: '#ff00aa' },
   { position: [-10, 1.2, 10] as [number, number, number], color: '#8800ff' },
@@ -15,10 +16,21 @@ const COLLECTIBLE_DATA = [
   { position: [0, 1.2, 20] as [number, number, number], color: '#ff00aa' },
   { position: [-20, 1.2, 0] as [number, number, number], color: '#8800ff' },
   { position: [20, 1.2, 0] as [number, number, number], color: '#ffcc00' },
-  { position: [6, 1.2, -6] as [number, number, number], color: '#00ffff' },
-  { position: [-6, 1.2, 6] as [number, number, number], color: '#ff00aa' },
-  { position: [-18, 1.2, -18] as [number, number, number], color: '#8800ff' },
-  { position: [18, 1.2, 18] as [number, number, number], color: '#ffcc00' },
+  { position: [15, 1.2, 15] as [number, number, number], color: '#00ffff' },
+  { position: [-15, 1.2, -15] as [number, number, number], color: '#ff00aa' },
+  { position: [5, 1.2, -14] as [number, number, number], color: '#8800ff' },
+  { position: [-5, 1.2, 14] as [number, number, number], color: '#ffcc00' },
+  // On low platforms (height 1.2 → top at 1.2)
+  { position: [-12, 2.5, -12] as [number, number, number], color: '#ffcc00' },
+  { position: [12, 2.5, 12] as [number, number, number], color: '#00ffff' },
+  // On medium platforms (height 2 → top at 2)
+  { position: [0, 4.0, -6] as [number, number, number], color: '#ff00aa' },
+  { position: [0, 4.0, 6] as [number, number, number], color: '#8800ff' },
+  // On tall platforms (height 3 → top at 3)
+  { position: [-18, 4.2, 0] as [number, number, number], color: '#ffcc00' },
+  { position: [18, 4.2, 0] as [number, number, number], color: '#00ffff' },
+  { position: [0, 4.2, -18] as [number, number, number], color: '#ff00aa' },
+  { position: [0, 4.2, 18] as [number, number, number], color: '#8800ff' },
 ];
 
 export default function GameScene() {
