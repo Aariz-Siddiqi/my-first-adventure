@@ -7,16 +7,18 @@ import Lighting from './Lighting';
 import HUD from './HUD';
 
 const COLLECTIBLE_DATA = [
-  { position: [-5, 1.2, -5] as [number, number, number], color: '#00ffff' },
-  { position: [5, 1.2, -5] as [number, number, number], color: '#ff00aa' },
-  { position: [-5, 1.2, 5] as [number, number, number], color: '#8800ff' },
-  { position: [5, 1.2, 5] as [number, number, number], color: '#ffcc00' },
-  { position: [0, 1.2, -10] as [number, number, number], color: '#00ffff' },
-  { position: [0, 1.2, 10] as [number, number, number], color: '#ff00aa' },
-  { position: [-10, 1.2, 0] as [number, number, number], color: '#8800ff' },
-  { position: [10, 1.2, 0] as [number, number, number], color: '#ffcc00' },
-  { position: [4, 1.2, 0] as [number, number, number], color: '#00ffff' },
-  { position: [-4, 1.2, 0] as [number, number, number], color: '#ff00aa' },
+  { position: [-10, 1.2, -10] as [number, number, number], color: '#00ffff' },
+  { position: [10, 1.2, -10] as [number, number, number], color: '#ff00aa' },
+  { position: [-10, 1.2, 10] as [number, number, number], color: '#8800ff' },
+  { position: [10, 1.2, 10] as [number, number, number], color: '#ffcc00' },
+  { position: [0, 1.2, -20] as [number, number, number], color: '#00ffff' },
+  { position: [0, 1.2, 20] as [number, number, number], color: '#ff00aa' },
+  { position: [-20, 1.2, 0] as [number, number, number], color: '#8800ff' },
+  { position: [20, 1.2, 0] as [number, number, number], color: '#ffcc00' },
+  { position: [6, 1.2, -6] as [number, number, number], color: '#00ffff' },
+  { position: [-6, 1.2, 6] as [number, number, number], color: '#ff00aa' },
+  { position: [-18, 1.2, -18] as [number, number, number], color: '#8800ff' },
+  { position: [18, 1.2, 18] as [number, number, number], color: '#ffcc00' },
 ];
 
 export default function GameScene() {

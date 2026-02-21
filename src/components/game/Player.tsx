@@ -2,12 +2,14 @@ import { useRef, useEffect, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const MOVE_SPEED = 8;
+const MOVE_SPEED = 10;
 const MOUSE_SENSITIVITY = 0.002;
 const PLAYER_HEIGHT = 1.7;
-const ARENA_SIZE = 24;
+const ARENA_SIZE = 48;
 const HEAD_BOB_SPEED = 12;
 const HEAD_BOB_AMOUNT = 0.04;
+const JUMP_FORCE = 6;
+const GRAVITY = 15;
 
 interface PlayerProps {
   onPositionUpdate: (pos: [number, number, number]) => void;
@@ -20,9 +22,16 @@ export default function Player({ onPositionUpdate }: PlayerProps) {
   const velocity = useRef(new THREE.Vector3());
   const isLocked = useRef(false);
   const bobTime = useRef(0);
+  const verticalVelocity = useRef(0);
+  const isGrounded = useRef(true);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     keys.current[e.code] = true;
+    if (e.code === 'Space' && isGrounded.current) {
+      verticalVelocity.current = JUMP_FORCE;
+      isGrounded.current = false;
+      e.preventDefault();
+    }
   }, []);
 
   const handleKeyUp = useCallback((e: KeyboardEvent) => {
@@ -91,12 +100,21 @@ export default function Player({ onPositionUpdate }: PlayerProps) {
     newPos.x = Math.max(-boundary, Math.min(boundary, newPos.x));
     newPos.z = Math.max(-boundary, Math.min(boundary, newPos.z));
 
-    // Head bob
-    if (moving) {
-      bobTime.current += delta * HEAD_BOB_SPEED;
-      newPos.y = PLAYER_HEIGHT + Math.sin(bobTime.current) * HEAD_BOB_AMOUNT;
-    } else {
+    // Jumping / gravity
+    verticalVelocity.current -= GRAVITY * delta;
+    newPos.y = camera.position.y + verticalVelocity.current * delta;
+
+    if (newPos.y <= PLAYER_HEIGHT) {
       newPos.y = PLAYER_HEIGHT;
+      verticalVelocity.current = 0;
+      isGrounded.current = true;
+    }
+
+    // Head bob (only when grounded and moving)
+    if (moving && isGrounded.current) {
+      bobTime.current += delta * HEAD_BOB_SPEED;
+      newPos.y += Math.sin(bobTime.current) * HEAD_BOB_AMOUNT;
+    } else if (isGrounded.current) {
       bobTime.current = 0;
     }
 
