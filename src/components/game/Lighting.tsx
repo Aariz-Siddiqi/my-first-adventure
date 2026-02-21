@@ -11,11 +11,13 @@ export default function Lighting() {
         shadow-mapSize-height={1024}
       />
       {/* Neon accent lights */}
-      <pointLight position={[-10, 3, -10]} color="#00ffff" intensity={3} distance={20} />
-      <pointLight position={[10, 3, 10]} color="#ff00aa" intensity={3} distance={20} />
-      <pointLight position={[0, 3, 0]} color="#8800ff" intensity={2} distance={15} />
+      <pointLight position={[-20, 3, -20]} color="#00ffff" intensity={4} distance={35} />
+      <pointLight position={[20, 3, 20]} color="#ff00aa" intensity={4} distance={35} />
+      <pointLight position={[0, 3, 0]} color="#8800ff" intensity={3} distance={25} />
+      <pointLight position={[-20, 3, 20]} color="#ffcc00" intensity={3} distance={30} />
+      <pointLight position={[20, 3, -20]} color="#00ffff" intensity={3} distance={30} />
       {/* Fog */}
-      <fog attach="fog" args={['#060d1f', 5, 35]} />
+      <fog attach="fog" args={['#060d1f', 8, 55]} />
     </>
   );
 }

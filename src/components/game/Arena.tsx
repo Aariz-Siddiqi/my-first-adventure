@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 
-const ARENA_SIZE = 24;
+const ARENA_SIZE = 48;
 const WALL_HEIGHT = 4;
 
 function GridFloor() {
@@ -72,9 +72,11 @@ export default function Arena() {
   const h = WALL_HEIGHT / 2;
 
   const pillarPositions: [number, number, number][] = [
-    [-8, 0, -8], [-8, 0, 0], [-8, 0, 8],
-    [0, 0, -8], [0, 0, 8],
-    [8, 0, -8], [8, 0, 0], [8, 0, 8],
+    [-16, 0, -16], [-16, 0, 0], [-16, 0, 16],
+    [-8, 0, -8], [-8, 0, 8],
+    [0, 0, -16], [0, 0, 16],
+    [8, 0, -8], [8, 0, 8],
+    [16, 0, -16], [16, 0, 0], [16, 0, 16],
   ];
 
   return (
