@@ -76,7 +76,7 @@ export default function HUD({ isLocked, elapsedTime, bestTime, reached, falls }:
             </div>
             <div className="font-body text-base text-foreground space-y-1 mb-6">
               <div><span className="font-display text-primary">WASD</span> — Move</div>
-              <div><span className="font-display text-primary">Space</span> — Jump</div>
+              <div><span className="font-display text-primary">Space</span> — Jump (tap again for double jump!)</div>
               <div><span className="font-display text-primary">Mouse</span> — Look around</div>
               <div className="pt-2">Hop the platforms and reach the 🚩 checkpoint!</div>
             </div>
