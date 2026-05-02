@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['Orbitron', 'monospace'],
-        body: ['Rajdhani', 'sans-serif'],
+        display: ['"Baloo 2"', 'cursive'],
+        body: ['Fredoka', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -51,11 +51,13 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        neon: {
-          cyan: "hsl(var(--neon-cyan))",
-          magenta: "hsl(var(--neon-magenta))",
-          purple: "hsl(var(--neon-purple))",
-          yellow: "hsl(var(--neon-yellow))",
+        candy: {
+          pink: "hsl(var(--candy-pink))",
+          yellow: "hsl(var(--candy-yellow))",
+          mint: "hsl(var(--candy-mint))",
+          sky: "hsl(var(--candy-sky))",
+          lavender: "hsl(var(--candy-lavender))",
+          orange: "hsl(var(--candy-orange))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
