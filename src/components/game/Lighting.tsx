@@ -1,23 +1,21 @@
 export default function Lighting() {
   return (
     <>
-      <ambientLight intensity={0.15} color="#1a1a3e" />
+      <ambientLight intensity={0.7} color="#ffffff" />
+      <hemisphereLight args={['#bde6ff', '#7ed957', 0.6]} />
       <directionalLight
-        position={[10, 15, 10]}
-        intensity={0.3}
-        color="#4488ff"
+        position={[15, 25, 10]}
+        intensity={1.2}
+        color="#fff5d6"
         castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-left={-30}
+        shadow-camera-right={30}
+        shadow-camera-top={30}
+        shadow-camera-bottom={-30}
       />
-      {/* Neon accent lights */}
-      <pointLight position={[-20, 3, -20]} color="#00ffff" intensity={4} distance={35} />
-      <pointLight position={[20, 3, 20]} color="#ff00aa" intensity={4} distance={35} />
-      <pointLight position={[0, 3, 0]} color="#8800ff" intensity={3} distance={25} />
-      <pointLight position={[-20, 3, 20]} color="#ffcc00" intensity={3} distance={30} />
-      <pointLight position={[20, 3, -20]} color="#00ffff" intensity={3} distance={30} />
-      {/* Fog */}
-      <fog attach="fog" args={['#060d1f', 8, 55]} />
+      <fog attach="fog" args={['#bde6ff', 40, 120]} />
     </>
   );
 }

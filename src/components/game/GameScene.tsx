@@ -1,58 +1,40 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import Player from './Player';
-import Arena from './Arena';
-import Collectible from './Collectible';
+import Arena, { GOAL_POSITION } from './Arena';
+import Checkpoint from './Checkpoint';
 import Lighting from './Lighting';
 import HUD from './HUD';
 
-const COLLECTIBLE_DATA = [
-  // Ground level orbs
-  { position: [-10, 1.2, -10] as [number, number, number], color: '#00ffff' },
-  { position: [10, 1.2, -10] as [number, number, number], color: '#ff00aa' },
-  { position: [-10, 1.2, 10] as [number, number, number], color: '#8800ff' },
-  { position: [10, 1.2, 10] as [number, number, number], color: '#ffcc00' },
-  { position: [0, 1.2, -20] as [number, number, number], color: '#00ffff' },
-  { position: [0, 1.2, 20] as [number, number, number], color: '#ff00aa' },
-  { position: [-20, 1.2, 0] as [number, number, number], color: '#8800ff' },
-  { position: [20, 1.2, 0] as [number, number, number], color: '#ffcc00' },
-  { position: [15, 1.2, 15] as [number, number, number], color: '#00ffff' },
-  { position: [-15, 1.2, -15] as [number, number, number], color: '#ff00aa' },
-  { position: [5, 1.2, -14] as [number, number, number], color: '#8800ff' },
-  { position: [-5, 1.2, 14] as [number, number, number], color: '#ffcc00' },
-  // On low platforms (height 1.2 → top at 1.2)
-  { position: [-12, 2.5, -12] as [number, number, number], color: '#ffcc00' },
-  { position: [12, 2.5, 12] as [number, number, number], color: '#00ffff' },
-  // On medium platforms (height 2 → top at 2)
-  { position: [0, 4.0, -6] as [number, number, number], color: '#ff00aa' },
-  { position: [0, 4.0, 6] as [number, number, number], color: '#8800ff' },
-  // On tall platforms (height 3 → top at 3)
-  { position: [-18, 4.2, 0] as [number, number, number], color: '#ffcc00' },
-  { position: [18, 4.2, 0] as [number, number, number], color: '#00ffff' },
-  { position: [0, 4.2, -18] as [number, number, number], color: '#ff00aa' },
-  { position: [0, 4.2, 18] as [number, number, number], color: '#8800ff' },
-];
+const BEST_KEY = 'sky-hop-best';
 
 export default function GameScene() {
-  const [collected, setCollected] = useState<boolean[]>(new Array(COLLECTIBLE_DATA.length).fill(false));
   const [playerPos, setPlayerPos] = useState<[number, number, number]>([0, 1.7, 0]);
   const [isLocked, setIsLocked] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [bestTime, setBestTime] = useState<number | null>(() => {
-    const saved = localStorage.getItem('neon-arena-best');
+    const saved = localStorage.getItem(BEST_KEY);
     return saved ? parseFloat(saved) : null;
   });
   const [gameStarted, setGameStarted] = useState(false);
+  const [reached, setReached] = useState(false);
+  const [falls, setFalls] = useState(0);
+  const [resetSignal, setResetSignal] = useState(0);
   const startTimeRef = useRef<number | null>(null);
   const animFrameRef = useRef<number>(0);
   const finalTimeRef = useRef<number>(0);
 
-  const score = collected.filter(Boolean).length;
-  const won = score === COLLECTIBLE_DATA.length;
+  // Start timer when locked & moving in
+  useEffect(() => {
+    if (isLocked && !gameStarted && !reached) {
+      setGameStarted(true);
+      startTimeRef.current = performance.now();
+    }
+  }, [isLocked, gameStarted, reached]);
 
   // Timer loop
   useEffect(() => {
-    if (!gameStarted || won) return;
+    if (!gameStarted || reached) return;
     let running = true;
     const tick = () => {
       if (!running || !startTimeRef.current) return;
@@ -63,54 +45,44 @@ export default function GameScene() {
     };
     animFrameRef.current = requestAnimationFrame(tick);
     return () => { running = false; cancelAnimationFrame(animFrameRef.current); };
-  }, [gameStarted, won]);
+  }, [gameStarted, reached]);
 
   // Save best time on win
   useEffect(() => {
-    if (won) {
+    if (reached) {
       const time = finalTimeRef.current;
       if (bestTime === null || time < bestTime) {
         setBestTime(time);
-        localStorage.setItem('neon-arena-best', time.toString());
+        localStorage.setItem(BEST_KEY, time.toString());
       }
     }
-  }, [won]);
+  }, [reached]);
 
-  const handleCollect = useCallback((index: number) => {
-    if (!gameStarted) {
-      setGameStarted(true);
-      startTimeRef.current = performance.now();
-    }
-    setCollected(prev => {
-      const next = [...prev];
-      next[index] = true;
-      return next;
-    });
-  }, [gameStarted]);
+  const handleReach = useCallback(() => {
+    setReached(prev => prev || true);
+  }, []);
 
-  // Restart on R key
+  const handleFall = useCallback(() => {
+    setFalls(f => f + 1);
+  }, []);
+
+  // Restart on R
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.code === 'KeyR') {
-        setCollected(new Array(COLLECTIBLE_DATA.length).fill(false));
         setElapsedTime(0);
         setGameStarted(false);
+        setReached(false);
+        setFalls(0);
         startTimeRef.current = null;
         finalTimeRef.current = 0;
+        setResetSignal(s => s + 1);
       }
     };
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
   }, []);
 
-  // Track pointer lock
-  useEffect(() => {
-    const onChange = () => setIsLocked(!!document.pointerLockElement);
-    document.addEventListener('pointerlockchange', onChange);
-    return () => document.removeEventListener('pointerlockchange', onChange);
-  }, []);
-
-  // Track pointer lock
   useEffect(() => {
     const onChange = () => setIsLocked(!!document.pointerLockElement);
     document.addEventListener('pointerlockchange', onChange);
@@ -118,26 +90,32 @@ export default function GameScene() {
   }, []);
 
   return (
-    <div className="relative w-full h-screen bg-background overflow-hidden">
-      <HUD score={score} total={COLLECTIBLE_DATA.length} isLocked={isLocked} elapsedTime={elapsedTime} bestTime={bestTime} />
+    <div className="relative w-full h-screen overflow-hidden" style={{ background: 'linear-gradient(180deg, #bde6ff 0%, #ffd6e8 100%)' }}>
+      <HUD
+        isLocked={isLocked}
+        elapsedTime={elapsedTime}
+        bestTime={bestTime}
+        reached={reached}
+        falls={falls}
+      />
       <Canvas
         shadows
-        camera={{ fov: 75, near: 0.1, far: 100 }}
-        style={{ background: '#060d1f' }}
+        camera={{ fov: 75, near: 0.1, far: 200 }}
+        style={{ background: 'transparent' }}
       >
         <Lighting />
         <Arena />
-        <Player onPositionUpdate={setPlayerPos} />
-        {COLLECTIBLE_DATA.map((item, i) => (
-          <Collectible
-            key={i}
-            position={item.position}
-            color={item.color}
-            collected={collected[i]}
-            onCollect={() => handleCollect(i)}
-            playerPosition={playerPos}
-          />
-        ))}
+        <Player
+          onPositionUpdate={setPlayerPos}
+          onFall={handleFall}
+          resetSignal={resetSignal}
+        />
+        <Checkpoint
+          position={GOAL_POSITION}
+          reached={reached}
+          playerPosition={playerPos}
+          onReach={handleReach}
+        />
       </Canvas>
     </div>
   );
