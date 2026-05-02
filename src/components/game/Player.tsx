@@ -1,22 +1,26 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { PLATFORMS, type PlatformData } from './Arena';
+import { PLATFORMS } from './Arena';
 
-const MOVE_SPEED = 10;
+const MOVE_SPEED = 9;
 const MOUSE_SENSITIVITY = 0.002;
-const PLAYER_HEIGHT = 1.7;
-const ARENA_SIZE = 48;
-const HEAD_BOB_SPEED = 12;
-const HEAD_BOB_AMOUNT = 0.04;
-const JUMP_FORCE = 6;
-const GRAVITY = 15;
+const PLAYER_HEIGHT = 1.6;
+const HEAD_BOB_SPEED = 11;
+const HEAD_BOB_AMOUNT = 0.05;
+const JUMP_FORCE = 8;
+const GRAVITY = 22;
+const FALL_RESET_Y = -6;
 
 interface PlayerProps {
   onPositionUpdate: (pos: [number, number, number]) => void;
+  onFall: () => void;
+  resetSignal: number;
 }
 
-export default function Player({ onPositionUpdate }: PlayerProps) {
+const SPAWN: [number, number, number] = [0, PLAYER_HEIGHT + 1, 0];
+
+export default function Player({ onPositionUpdate, onFall, resetSignal }: PlayerProps) {
   const { camera, gl } = useThree();
   const keys = useRef<Record<string, boolean>>({});
   const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
@@ -24,7 +28,15 @@ export default function Player({ onPositionUpdate }: PlayerProps) {
   const isLocked = useRef(false);
   const bobTime = useRef(0);
   const verticalVelocity = useRef(0);
-  const isGrounded = useRef(true);
+  const isGrounded = useRef(false);
+
+  const respawn = useCallback(() => {
+    camera.position.set(...SPAWN);
+    verticalVelocity.current = 0;
+    isGrounded.current = false;
+  }, [camera]);
+
+  useEffect(() => { respawn(); }, [respawn, resetSignal]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     keys.current[e.code] = true;
@@ -51,17 +63,13 @@ export default function Player({ onPositionUpdate }: PlayerProps) {
   }, [gl]);
 
   useEffect(() => {
-    camera.position.set(0, PLAYER_HEIGHT, 0);
-    
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('pointerlockchange', handlePointerLockChange);
 
     const handleClick = () => {
-      if (!isLocked.current) {
-        gl.domElement.requestPointerLock();
-      }
+      if (!isLocked.current) gl.domElement.requestPointerLock();
     };
     gl.domElement.addEventListener('click', handleClick);
 
@@ -72,21 +80,19 @@ export default function Player({ onPositionUpdate }: PlayerProps) {
       document.removeEventListener('pointerlockchange', handlePointerLockChange);
       gl.domElement.removeEventListener('click', handleClick);
     };
-  }, [camera, gl, handleKeyDown, handleKeyUp, handleMouseMove, handlePointerLockChange]);
+  }, [gl, handleKeyDown, handleKeyUp, handleMouseMove, handlePointerLockChange]);
 
-  useFrame((_, delta) => {
+  useFrame((_, deltaRaw) => {
+    const delta = Math.min(deltaRaw, 0.05);
     camera.quaternion.setFromEuler(euler.current);
 
     const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-    forward.y = 0;
-    forward.normalize();
+    forward.y = 0; forward.normalize();
     const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
-    right.y = 0;
-    right.normalize();
+    right.y = 0; right.normalize();
 
     velocity.current.set(0, 0, 0);
     let moving = false;
-
     if (keys.current['KeyW'] || keys.current['ArrowUp']) { velocity.current.add(forward); moving = true; }
     if (keys.current['KeyS'] || keys.current['ArrowDown']) { velocity.current.sub(forward); moving = true; }
     if (keys.current['KeyD'] || keys.current['ArrowRight']) { velocity.current.add(right); moving = true; }
@@ -97,41 +103,50 @@ export default function Player({ onPositionUpdate }: PlayerProps) {
     }
 
     const newPos = camera.position.clone().add(velocity.current);
-    const boundary = ARENA_SIZE / 2 - 0.5;
-    newPos.x = Math.max(-boundary, Math.min(boundary, newPos.x));
-    newPos.z = Math.max(-boundary, Math.min(boundary, newPos.z));
 
-    // Jumping / gravity
+    // Gravity
     verticalVelocity.current -= GRAVITY * delta;
     newPos.y = camera.position.y + verticalVelocity.current * delta;
 
-    // Check platform collisions
-    let groundLevel = PLAYER_HEIGHT; // default floor
+    // Platform landing
+    let landed = false;
+    let landY = -Infinity;
     for (const plat of PLATFORMS) {
       const topY = plat.position[1] + plat.size[1] / 2;
       const halfW = plat.size[0] / 2;
       const halfD = plat.size[2] / 2;
-      const onPlatformXZ =
+      const onXZ =
         newPos.x >= plat.position[0] - halfW &&
         newPos.x <= plat.position[0] + halfW &&
         newPos.z >= plat.position[2] - halfD &&
         newPos.z <= plat.position[2] + halfD;
-      if (onPlatformXZ) {
-        const platGroundLevel = topY + PLAYER_HEIGHT;
-        // Only land if coming from above
-        if (platGroundLevel > groundLevel && camera.position.y >= topY + PLAYER_HEIGHT - 0.3) {
-          groundLevel = platGroundLevel;
-        }
+      if (!onXZ) continue;
+      const targetFeet = topY;
+      const playerFeet = newPos.y - PLAYER_HEIGHT;
+      const wasAbove = (camera.position.y - PLAYER_HEIGHT) >= topY - 0.05;
+      if (playerFeet <= targetFeet && wasAbove && verticalVelocity.current <= 0) {
+        if (topY > landY) landY = topY;
+        landed = true;
       }
     }
 
-    if (newPos.y <= groundLevel) {
-      newPos.y = groundLevel;
+    if (landed) {
+      newPos.y = landY + PLAYER_HEIGHT;
       verticalVelocity.current = 0;
       isGrounded.current = true;
+    } else {
+      isGrounded.current = false;
     }
 
-    // Head bob (only when grounded and moving)
+    // Fall off the world
+    if (newPos.y < FALL_RESET_Y) {
+      onFall();
+      camera.position.set(...SPAWN);
+      verticalVelocity.current = 0;
+      onPositionUpdate(SPAWN);
+      return;
+    }
+
     if (moving && isGrounded.current) {
       bobTime.current += delta * HEAD_BOB_SPEED;
       newPos.y += Math.sin(bobTime.current) * HEAD_BOB_AMOUNT;
