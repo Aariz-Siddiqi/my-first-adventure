@@ -29,20 +29,29 @@ export default function Player({ onPositionUpdate, onFall, resetSignal }: Player
   const bobTime = useRef(0);
   const verticalVelocity = useRef(0);
   const isGrounded = useRef(false);
+  const jumpsRemaining = useRef(0);
 
   const respawn = useCallback(() => {
     camera.position.set(...SPAWN);
     verticalVelocity.current = 0;
     isGrounded.current = false;
+    jumpsRemaining.current = 0;
   }, [camera]);
 
   useEffect(() => { respawn(); }, [respawn, resetSignal]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    const wasDown = keys.current[e.code];
     keys.current[e.code] = true;
-    if (e.code === 'Space' && isGrounded.current) {
-      verticalVelocity.current = JUMP_FORCE;
-      isGrounded.current = false;
+    if (e.code === 'Space' && !wasDown) {
+      if (isGrounded.current) {
+        verticalVelocity.current = JUMP_FORCE;
+        isGrounded.current = false;
+        jumpsRemaining.current = 1; // one air jump available
+      } else if (jumpsRemaining.current > 0) {
+        verticalVelocity.current = JUMP_FORCE * 0.9;
+        jumpsRemaining.current -= 1;
+      }
       e.preventDefault();
     }
   }, []);
@@ -134,6 +143,7 @@ export default function Player({ onPositionUpdate, onFall, resetSignal }: Player
       newPos.y = landY + PLAYER_HEIGHT;
       verticalVelocity.current = 0;
       isGrounded.current = true;
+      jumpsRemaining.current = 1; // refresh double jump on landing
     } else {
       isGrounded.current = false;
     }
