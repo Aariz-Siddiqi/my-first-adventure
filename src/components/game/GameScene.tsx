@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import Player from './Player';
 import Arena, { GOAL_POSITION } from './Arena';
 import Checkpoint from './Checkpoint';
+import Obstacles from './Obstacles';
 import Lighting from './Lighting';
 import HUD from './HUD';
 
@@ -66,6 +67,11 @@ export default function GameScene() {
     setFalls(f => f + 1);
   }, []);
 
+  const handleObstacleHit = useCallback(() => {
+    setFalls(f => f + 1);
+    setResetSignal(s => s + 1);
+  }, []);
+
   // Restart on R
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -116,6 +122,7 @@ export default function GameScene() {
           playerPosition={playerPos}
           onReach={handleReach}
         />
+        <Obstacles playerPosition={playerPos} onHit={handleObstacleHit} />
       </Canvas>
     </div>
   );
